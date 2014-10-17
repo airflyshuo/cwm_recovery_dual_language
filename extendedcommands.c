@@ -185,19 +185,31 @@ static char* read_last_install_path() {
 
 static void toggle_signature_check() {
     signature_check_enabled = !signature_check_enabled;
+if ( language== 1 )
     ui_print("Signature Check: %s\n", signature_check_enabled ? "Enabled" : "Disabled");
+else
+    ui_print("签名校验: %s\n", signature_check_enabled ? "已启用" : "已禁用");
+
 }
 
 #ifdef ENABLE_LOKI
 int loki_support_enabled = 1;
 void toggle_loki_support() {
     loki_support_enabled = !loki_support_enabled;
+if ( language== 1 )
     ui_print("Loki Support: %s\n", loki_support_enabled ? "Enabled" : "Disabled");
+else
+    ui_print("Loki 支持: %s\n", loki_support_enabled ? "已启用" : "已禁用");
+
 }
 #endif
 
 int install_zip(const char* packagefilepath) {
+if ( language== 1 )
     ui_print("\n-- Installing: %s\n", packagefilepath);
+else
+    ui_print("\n-- 正在刷机: %s\n", packagefilepath);
+
     if (device_flash_type() == MTD) {
         set_sdcard_update_bootloader_message();
     }
@@ -206,12 +218,20 @@ int install_zip(const char* packagefilepath) {
     ui_reset_progress();
     if (status != INSTALL_SUCCESS) {
         ui_set_background(BACKGROUND_ICON_ERROR);
+if ( language== 1 )
         ui_print("Installation aborted.\n");
+else
+        ui_print("刷机已中止。\n");
+
         return 1;
     }
 #ifdef ENABLE_LOKI
     if (loki_support_enabled) {
+if ( language== 1 )
         ui_print("Checking if loki-fying is needed\n");
+else
+        ui_print("正在检查是否需要 loki-fying\n");
+
         status = loki_check();
         if (status != INSTALL_SUCCESS) {
             ui_set_background(BACKGROUND_ICON_ERROR);
@@ -220,8 +240,12 @@ int install_zip(const char* packagefilepath) {
     }
 #endif
 
-    ui_set_background(BACKGROUND_ICON_CLOCKWORK);
+    ui_set_background(BACKGROUND_ICON_ATX_ANZHI);
+if ( language== 1 )
     ui_print("\nInstall from sdcard complete.\n");
+else
+    ui_print("\n已完成 SD 卡中刷机包的刷入。\n");
+
     return 0;
 }
 
@@ -236,22 +260,43 @@ int show_install_update_menu() {
 
     memset(install_menu_items, 0, MAX_NUM_MANAGED_VOLUMES + FIXED_INSTALL_ZIP_MENUS + 1);
 
+
     static const char* headers[] = { "Install update from zip file", "", NULL };
+if ( language== 0 ) {
+    headers[0] = "刷入 zip 刷机包";
+}else{ 
+	headers[0] = "Install update from zip file"; 
+	}
+
 
     // FIXED_TOP_INSTALL_ZIP_MENUS
+if ( language== 1 )
     sprintf(buf, "choose zip from %s", primary_path);
+else
+    sprintf(buf, "从 %s 中选择刷机包", primary_path);
+
     install_menu_items[0] = strdup(buf);
 
     // extra storage volumes (vold managed)
     for (i = 0; i < num_extra_volumes; i++) {
+if ( language== 1 )
         sprintf(buf, "choose zip from %s", extra_paths[i]);
+else
+        sprintf(buf, "从 %s 中选择刷机包", extra_paths[i]);
+
         install_menu_items[FIXED_TOP_INSTALL_ZIP_MENUS + i] = strdup(buf);
     }
 
     // FIXED_BOTTOM_INSTALL_ZIP_MENUS
+if ( language== 1 ) {
     install_menu_items[FIXED_TOP_INSTALL_ZIP_MENUS + num_extra_volumes] = "choose zip from last install folder";
     install_menu_items[FIXED_TOP_INSTALL_ZIP_MENUS + num_extra_volumes + 1] = "install zip from sideload";
     install_menu_items[FIXED_TOP_INSTALL_ZIP_MENUS + num_extra_volumes + 2] = "toggle signature verification";
+} else {
+    install_menu_items[FIXED_TOP_INSTALL_ZIP_MENUS + num_extra_volumes] = "从上次选定文件夹中选择刷机包";
+    install_menu_items[FIXED_TOP_INSTALL_ZIP_MENUS + num_extra_volumes + 1] = "使用 sideload 方式刷机";
+    install_menu_items[FIXED_TOP_INSTALL_ZIP_MENUS + num_extra_volumes + 2] = "切换签名校验";
+}
 
     // extra NULL for GO_BACK
     install_menu_items[FIXED_TOP_INSTALL_ZIP_MENUS + num_extra_volumes + 3] = NULL;
@@ -312,7 +357,11 @@ static char** gather_files(const char* directory, const char* fileExtensionOrDir
 
     dir = opendir(directory);
     if (dir == NULL) {
+if ( language== 1 )
         ui_print("Couldn't open directory.\n");
+else
+        ui_print("无法打开文件夹。\n");
+
         return NULL;
     }
 
@@ -370,7 +419,11 @@ static char** gather_files(const char* directory, const char* fileExtensionOrDir
     }
 
     if (closedir(dir) < 0) {
+if ( language== 1 )
         LOGE("Failed to close directory.\n");
+else
+        LOGE("无法关闭文件夹。\n");
+
     }
 
     if (total == 0) {
@@ -427,7 +480,11 @@ static char* choose_file_menu(const char* basedir, const char* fileExtensionOrDi
         dirs = gather_files(directory, NULL, &numDirs);
     int total = numDirs + numFiles;
     if (total == 0) {
+if ( language== 1 )
         ui_print("No files found.\n");
+else
+        ui_print("未找到文件。\n");
+
     } else {
         char** list = (char**)malloc((total + 1) * sizeof(char*));
         list[total] = NULL;
@@ -467,33 +524,65 @@ static char* choose_file_menu(const char* basedir, const char* fileExtensionOrDi
 
 static void show_choose_zip_menu(const char *mount_point) {
     if (ensure_path_mounted(mount_point) != 0) {
+if ( language== 1 )
         LOGE("Can't mount %s\n", mount_point);
+else
+        LOGE("无法挂载 %s\n", mount_point);
+
         return;
     }
 
+
     static const char* headers[] = { "Choose a zip to apply", "", NULL };
+if ( language== 0 )
+    headers[0] = "选择要刷入的刷机包";
+
 
     char* file = choose_file_menu(mount_point, ".zip", headers);
     if (file == NULL)
         return;
     char confirm[PATH_MAX];
+if ( language== 1 )
     sprintf(confirm, "Yes - Install %s", basename(file));
+else
+    sprintf(confirm, "是 - 刷入 %s", basename(file));
 
+
+if ( language== 1 ) {
     if (confirm_selection("Confirm install?", confirm)) {
+
+	install_zip(file);
+        write_last_install_path(dirname(file));
+    }
+	free(file);
+
+}
+else {
+    if (confirm_selection("确认刷入？", confirm)) {
+
         install_zip(file);
         write_last_install_path(dirname(file));
     }
 
     free(file);
+	}
 }
 
 static void show_nandroid_restore_menu(const char* path) {
     if (ensure_path_mounted(path) != 0) {
+if ( language== 1 )
         LOGE("Can't mount %s\n", path);
+else
+        LOGE("无法挂载 %s\n", path);
+
         return;
     }
 
+
     static const char* headers[] = { "Choose an image to restore", "", NULL };
+	if ( language== 0 )
+		headers[0] = "选择要还原的镜像";
+
 
     char tmp[PATH_MAX];
     sprintf(tmp, "%s/clockworkmod/backup/", path);
@@ -501,22 +590,39 @@ static void show_nandroid_restore_menu(const char* path) {
     if (file == NULL)
         return;
 
-    if (confirm_selection("Confirm restore?", "Yes - Restore")) {
-        unsigned char flags = NANDROID_BOOT | NANDROID_SYSTEM | NANDROID_PRELOAD | NANDROID_DATA
-                              | NANDROID_CACHE | NANDROID_SDEXT;
-        nandroid_restore(file, flags);
-    }
+	if ( language== 1 ) {
+		if (confirm_selection("Confirm restore?", "Yes - Restore")) {
+			unsigned char flags = NANDROID_BOOT | NANDROID_SYSTEM | NANDROID_PRELOAD | NANDROID_DATA
+								  | NANDROID_CACHE | NANDROID_SDEXT;
+			nandroid_restore(file, flags);
+		}
+	}
+	else {
+		if (confirm_selection("确认还原？", "是 - 还原")) {
+			unsigned char flags = NANDROID_BOOT | NANDROID_SYSTEM | NANDROID_PRELOAD | NANDROID_DATA
+								  | NANDROID_CACHE | NANDROID_SDEXT;
+			nandroid_restore(file, flags);
+		}
+	}
 
     free(file);
 }
 
 static void show_nandroid_delete_menu(const char* path) {
     if (ensure_path_mounted(path) != 0) {
-        LOGE("Can't mount %s\n", path);
+		if ( language== 1 )
+			LOGE("Can't mount %s\n", path);
+		else
+			LOGE("无法挂载 %s\n", path);
+
         return;
     }
 
+
     static const char* headers[] = { "Choose an image to delete", "", NULL };
+if ( language== 0 )
+    headers[0] = "选择要删除的镜像";
+
 
     char tmp[PATH_MAX];
     sprintf(tmp, "%s/clockworkmod/backup/", path);
@@ -524,12 +630,23 @@ static void show_nandroid_delete_menu(const char* path) {
     if (file == NULL)
         return;
 
+if ( language== 1 ) {
     if (confirm_selection("Confirm delete?", "Yes - Delete")) {
+
+	sprintf(tmp, "rm -rf %s", file);
+        __system(tmp);
+    	}
+	free(file);
+  }
+else {
+    if (confirm_selection("确认删除？", "是 - 删除")) {
+
         sprintf(tmp, "rm -rf %s", file);
         __system(tmp);
     }
 
     free(file);
+	}
 }
 
 static int control_usb_storage(bool on) {
@@ -556,14 +673,29 @@ static void show_mount_usb_storage_menu() {
     if (!control_usb_storage(true))
         return;
 
+
     static const char* headers[] = { "USB Mass Storage device",
                                      "Leaving this menu unmounts",
                                      "your SD card from your PC.",
-                                     "",
+				     "",
                                      NULL
-    };
+    					};
+if ( language== 0 ) {
+    headers[0] = "U 盘模式";
+    headers[1] = "离开当前菜单即会停";
+    headers[2] = "用 U 盘模式。";
+	}
+else {
+    headers[0] = "USB Mass Storage device";
+    headers[1] = "Leaving this menu unmounts";
+    headers[2] = "your SD card from your PC.";
+	}                               
+
 
     static char* list[] = { "Unmount", NULL };
+if ( language== 0 )
+    list[0] = "停用";
+
 
     for (;;) {
         int chosen_item = get_menu_selection(headers, list, 0, 0);
@@ -593,8 +725,14 @@ int confirm_selection(const char* title, const char* confirm) {
 
     int many_confirm;
     char* confirm_str = strdup(confirm);
+
     const char* confirm_headers[] = { title, "  THIS CAN NOT BE UNDONE.", "", NULL };
-    int old_val = ui_is_showing_back_button();
+if ( language== 0 ) {
+    confirm_headers[1] = "  本操作是不可逆的。";
+} else { 
+    confirm_headers[1] = "  THIS CAN NOT BE UNDONE.";
+}
+	int old_val = ui_is_showing_back_button();
     ui_set_showing_back_button(0);
 
     sprintf(path, "%s%s%s", get_primary_storage_path(), (is_data_media() ? "/0/" : "/"), RECOVERY_MANY_CONFIRM_FILE);
@@ -602,6 +740,7 @@ int confirm_selection(const char* title, const char* confirm) {
     many_confirm = 0 == stat(path, &info);
 
     if (many_confirm) {
+
         char* items[] = { "No",
                           "No",
                           "No",
@@ -613,13 +752,45 @@ int confirm_selection(const char* title, const char* confirm) {
                           "No",
                           "No",
                           "No",
-                          NULL };
+				NULL };
+if ( language== 0 ) {
+        items[0] = "否";
+        items[1] = "否";
+        items[2] = "否";
+        items[3] = "否";
+        items[4] = "否";
+        items[5] = "否";
+        items[6] = "否";
+        items[7] = confirm_str; // Yes, [7]
+        items[8] =  "否";
+        items[9] = "否";
+        items[10] = "否";
+} else {
+        items[0] = "No";
+        items[1] = "No";
+        items[2] = "No";
+        items[3] = "No";
+        items[4] = "No";
+        items[5] = "No";
+        items[6] = "No";
+        items[7] = confirm_str; // Yes, [7]
+        items[8] = "No";
+        items[9] = "No";
+        items[10] = "No";
+}
         int chosen_item = get_menu_selection(confirm_headers, items, 0, 0);
         ret = (chosen_item == 7);
     } else {
+
         char* items[] = { "No",
-                          confirm_str, // Yes, [1]
+		confirm_str, // Yes, [1]
                           NULL };
+if ( language== 0 ) {
+        items[0] = "否";
+} else {
+        items[0] = "No";
+}
+                          
         int chosen_item = get_menu_selection(confirm_headers, items, 0, 0);
         ret = (chosen_item == 1);
     }
@@ -645,23 +816,39 @@ int format_device(const char *device, const char *path, const char *fs_type) {
     if (v == NULL) {
         // silent failure for sd-ext
         if (strcmp(path, "/sd-ext") != 0)
+if ( language== 1 )
             LOGE("unknown volume '%s'\n", path);
+else
+            LOGE("未知卷 '%s'\n", path);
+
         return -1;
     }
 
     if (strcmp(fs_type, "ramdisk") == 0) {
         // you can't format the ramdisk.
+if ( language== 1 )
         LOGE("can't format_volume \"%s\"", path);
+else
+        LOGE("无法格式化卷 \"%s\"", path);
+
         return -1;
     }
 
     if (strcmp(fs_type, "rfs") == 0) {
         if (ensure_path_unmounted(path) != 0) {
+if ( language== 1 )
             LOGE("format_volume failed to unmount \"%s\"\n", v->mount_point);
+else
+            LOGE("format_volume 卸载 \"%s\" 时出错\n", v->mount_point);
+
             return -1;
         }
         if (0 != format_rfs_device(device, path)) {
+if ( language== 1 )
             LOGE("format_volume: format_rfs_device failed on %s\n", device);
+else
+            LOGE("format_volume: 使用 format_rfs_device 格式化 %s 时出错\n", device);
+
             return -1;
         }
         return 0;
@@ -672,7 +859,11 @@ int format_device(const char *device, const char *path, const char *fs_type) {
     }
 
     if (ensure_path_unmounted(path) != 0) {
+if ( language== 1 )
         LOGE("format_volume failed to unmount \"%s\"\n", v->mount_point);
+else
+        LOGE("format_volume 卸载 \"%s\" 时出错\n", v->mount_point);
+
         return -1;
     }
 
@@ -680,20 +871,36 @@ int format_device(const char *device, const char *path, const char *fs_type) {
         mtd_scan_partitions();
         const MtdPartition* partition = mtd_find_partition_by_name(device);
         if (partition == NULL) {
+if ( language== 1 )
             LOGE("format_volume: no MTD partition \"%s\"\n", device);
+else
+            LOGE("format_volume: 无 MTD 分区 \"%s\"\n", device);
+
             return -1;
         }
 
         MtdWriteContext *write = mtd_write_partition(partition);
         if (write == NULL) {
+if ( language== 1 )
             LOGW("format_volume: can't open MTD \"%s\"\n", device);
+else
+            LOGW("format_volume: 无法打开 MTD 设备 \"%s\"\n", device);
+
             return -1;
         } else if (mtd_erase_blocks(write, -1) == (off_t) - 1) {
+if ( language== 1 )
             LOGW("format_volume: can't erase MTD \"%s\"\n", device);
+else
+            LOGW("format_volume: 无法擦除 MTD 设备 \"%s\"\n", device);
+
             mtd_write_close(write);
             return -1;
         } else if (mtd_write_close(write)) {
+if ( language== 1 )
             LOGW("format_volume: can't close MTD \"%s\"\n", device);
+else
+            LOGW("format_volume: 无法关闭 MTD 设备 \"%s\"\n", device);
+
             return -1;
         }
         return 0;
@@ -708,7 +915,11 @@ int format_device(const char *device, const char *path, const char *fs_type) {
 
         int result = make_ext4fs(device, length, v->mount_point, sehandle);
         if (result != 0) {
+if ( language== 1 )
             LOGE("format_volume: make_ext4fs failed on %s\n", device);
+else
+            LOGE("format_volume: 在设备 %s 上执行 make_ext4fs 时出错\n", device);
+
             return -1;
         }
         return 0;
@@ -727,7 +938,11 @@ int format_device(const char *device, const char *path, const char *fs_type) {
 }
 
 int format_unknown_device(const char *device, const char* path, const char *fs_type) {
+if ( language== 1 )
     LOGI("Formatting unknown device.\n");
+else
+    LOGI("正在格式化未知设备。\n");
+
 
     if (fs_type != NULL && get_flash_type(fs_type) != UNSUPPORTED)
         return erase_raw_partition(fs_type, device);
@@ -737,25 +952,45 @@ int format_unknown_device(const char *device, const char* path, const char *fs_t
         struct stat st;
         Volume *vol = volume_for_path("/sd-ext");
         if (vol == NULL || 0 != stat(vol->blk_device, &st)) {
+if ( language== 1 )
             LOGI("No app2sd partition found. Skipping format of /sd-ext.\n");
+else
+            LOGI("未找到 app2sd 分区。跳过对 /sd-ext 的格式化。\n");
+
             return 0;
         }
     }
 
     if (NULL != fs_type) {
         if (strcmp("ext3", fs_type) == 0) {
+if ( language== 1 )
             LOGI("Formatting ext3 device.\n");
+else
+            LOGI("格式化 ext3 设备。\n");
+
             if (0 != ensure_path_unmounted(path)) {
+if ( language== 1 )
                 LOGE("Error while unmounting %s.\n", path);
+else
+                LOGE("卸载 %s 时出错。\n", path);
+
                 return -12;
             }
             return format_ext3_device(device);
         }
 
         if (strcmp("ext2", fs_type) == 0) {
+if ( language== 1 )
             LOGI("Formatting ext2 device.\n");
+else
+            LOGI("格式化 ext2 设备。\n");
+
             if (0 != ensure_path_unmounted(path)) {
+if ( language== 1 )
                 LOGE("Error while unmounting %s.\n", path);
+else
+                LOGE("卸载 %s 时出错。\n", path);
+
                 return -12;
             }
             return format_ext2_device(device);
@@ -763,8 +998,13 @@ int format_unknown_device(const char *device, const char* path, const char *fs_t
     }
 
     if (0 != ensure_path_mounted(path)) {
+if ( language== 1 ) {
         ui_print("Error mounting %s!\n", path);
         ui_print("Skipping format...\n");
+} else {
+        ui_print("挂载 %s 时出错！\n", path);
+        ui_print("跳过格式化...\n");
+}
         return 0;
     }
 
@@ -782,10 +1022,18 @@ int format_unknown_device(const char *device, const char* path, const char *fs_t
                 fwrite(layout_version, 1, 2, f);
                 fclose(f);
             } else {
+if ( language== 1 )
                 LOGI("error opening /data/.layout_version for write.\n");
+else
+                LOGI("打开 /data/.layout_version 进行写入时出错。\n");
+
             }
         } else {
+if ( language== 1 )
             LOGI("/data/media/0 not found. migration may occur.\n");
+else
+            LOGI("未找到 /data/media/0。可能已被移动到其他位置。\n");
+
         }
     } else {
         sprintf(tmp, "rm -rf %s/*", path);
@@ -887,10 +1135,23 @@ static int is_ums_capable() {
 }
 
 int show_partition_menu() {
+
     static const char* headers[] = { "Mounts and Storage Menu", "", NULL };
 
-    static char* confirm_format = "Confirm format?";
-    static char* confirm = "Yes - Format";
+    if ( language== 0 ) headers[0] = "挂载及 U 盘模式";
+
+
+
+    static char* confirm_format[] = { "Confirm format?" };
+    static char* confirm[] = { "Yes - Format" };
+if ( language== 0 ) {
+    confirm_format[0] = "确认格式化？";
+    confirm[0] = "是 - 格式化";
+} else {
+
+    confirm_format[0] = "Confirm format?";
+    confirm[0] = "Yes - Format";
+}
     char confirm_string[255];
 
     static MountMenuEntry* mount_menu = NULL;
@@ -931,13 +1192,22 @@ int show_partition_menu() {
         MFMatrix mfm = get_mnt_fmt_capabilities(v->fs_type, v->mount_point);
 
         if (mfm.can_mount) {
+if ( language== 1 ) {
             sprintf(mount_menu[mountable_volumes].mount, "mount %s", v->mount_point);
             sprintf(mount_menu[mountable_volumes].unmount, "unmount %s", v->mount_point);
+}else{
+            sprintf(mount_menu[mountable_volumes].mount, "挂载 %s", v->mount_point);
+            sprintf(mount_menu[mountable_volumes].unmount, "卸载 %s", v->mount_point);
+}
             sprintf(mount_menu[mountable_volumes].path, "%s", v->mount_point);
             ++mountable_volumes;
         }
         if (mfm.can_format) {
+if ( language== 1 )
             sprintf(format_menu[formatable_volumes].txt, "format %s", v->mount_point);
+else
+            sprintf(format_menu[formatable_volumes].txt, "格式化 %s", v->mount_point);
+
             sprintf(format_menu[formatable_volumes].path, "%s", v->mount_point);
             sprintf(format_menu[formatable_volumes].type, "%s", v->fs_type);
             ++formatable_volumes;
@@ -963,12 +1233,18 @@ int show_partition_menu() {
 
         if (me.dm = is_data_media()) {
             me.idm = menu_entries;
-            list[me.idm] = "format /data and /data/media (/sdcard)";
+			if ( language== 1 )
+				list[me.idm] = "format /data and /data/media (/sdcard)";
+			else
+				list[me.idm] = "格式化 /data 和 /data/media (/sdcard)";
             menu_entries++;
         }
         if (me.ums = is_ums_capable()) {
             me.iums = menu_entries;
-            list[me.iums] = "mount USB storage";
+			if ( language== 1 )
+				list[me.iums] = "mount USB storage";
+			else
+				list[me.iums] = "开启 U 盘模式";
             menu_entries++;
         }
         list[menu_entries] = '\0';
@@ -983,17 +1259,25 @@ int show_partition_menu() {
             if (is_path_mounted(e->path)) {
                 preserve_data_media(0);
                 if (0 != ensure_path_unmounted(e->path))
+if ( language== 1 )
                     ui_print("Error unmounting %s!\n", e->path);
+else
+                    ui_print("卸载 %s 时出错！\n", e->path);
+
                 preserve_data_media(1);
             } else {
                 if (0 != ensure_path_mounted(e->path))
+if ( language== 1 )
                     ui_print("Error mounting %s!\n", e->path);
+else
+                    ui_print("挂载 %s 时出错！\n", e->path);
+
             }
         } else if (chosen_item < (mountable_volumes + formatable_volumes)) {
             chosen_item = chosen_item - mountable_volumes;
             FormatMenuEntry* e = &format_menu[chosen_item];
 
-            sprintf(confirm_string, "%s - %s", e->path, confirm_format);
+            sprintf(confirm_string, "%s - %s", e->path, confirm_format[0]);
 
             // support user choice fstype when formatting external storage
             // ensure fstype==auto because most devices with internal vfat
@@ -1003,22 +1287,51 @@ int show_partition_menu() {
                 continue;
             }
 
-            if (!confirm_selection(confirm_string, confirm))
+            if (!confirm_selection(confirm_string, confirm[0]))
                 continue;
-            ui_print("Formatting %s...\n", e->path);
-            if (0 != format_volume(e->path))
-                ui_print("Error formatting %s!\n", e->path);
-            else
-                ui_print("Done.\n");
+			if ( language== 1 )
+				ui_print("Formatting %s...\n", e->path);
+			else
+				ui_print("正在格式化 %s...\n", e->path);
+
+            if (0 != format_volume(e->path)) {
+				if ( language== 1 )
+					ui_print("Error formatting %s!\n", e->path);
+				else
+					ui_print("格式化 %s 时出错！\n", e->path);
+			}
+            else {
+				if ( language== 1 )
+					ui_print("Done.\n");
+				else
+					ui_print("完成。\n");
+			}
         } else if (me.dm && chosen_item == me.idm) {
-            if (!confirm_selection("format /data and /data/media (/sdcard)", confirm))
-                continue;
+			if ( language== 1 ) {
+				if (!confirm_selection("format /data and /data/media (/sdcard)", confirm))
+					continue;
+			}
+			else {
+				if (!confirm_selection("格式化/data和/data/media (/sdcard)", confirm))
+					continue;
+			}
             preserve_data_media(0);
-            ui_print("Formatting /data...\n");
-            if (0 != format_volume("/data"))
-                ui_print("Error formatting /data!\n");
-            else
-                ui_print("Done.\n");
+			if ( language== 1 )
+				ui_print("Formatting /data...\n");
+			else
+				ui_print("正在格式化/data...\n");
+            if (0 != format_volume("/data")) {
+				if ( language== 1 )
+					ui_print("Error formatting /data!\n");
+				else
+					ui_print("格式化/data出错!\n");
+			}
+            else {
+				if ( language== 1 )
+					ui_print("Done.\n");
+				else
+					ui_print("完成。\n");
+			}
             preserve_data_media(1);
 
             // recreate /data/media with proper permissions
@@ -1084,17 +1397,34 @@ int empty_nandroid_bitmask(unsigned char flags) {
 
 static void show_nandroid_advanced_restore_menu(const char* path) {
     if (ensure_path_mounted(path) != 0) {
+if ( language== 1 )
         LOGE("Can't mount sdcard\n");
+else
+        LOGE("无法挂载 SD 卡\n");
+
         return;
     }
+
 
     static const char* advancedheaders[] = { "Choose an image to restore",
                                              "",
                                              "Choose an image to restore",
                                              "first. The next menu will",
                                              "show you more options.",
-                                             "",
+						"",
                                              NULL };
+if ( language== 0 ) {
+    advancedheaders[0] = "选择一个要还原的镜像";
+    advancedheaders[2] = "首先选择一个要还原的镜";
+    advancedheaders[3] = "像。接下来的菜单会有更";
+    advancedheaders[4] = "多的选项以供选择。";
+} else {
+    advancedheaders[0] = "Choose an image to restore";
+    advancedheaders[2] = "Choose an image to restore";
+    advancedheaders[3] = "first. The next menu will";
+    advancedheaders[4] = "show you more options.";
+} 
+                                             
 
     char tmp[PATH_MAX];
     sprintf(tmp, "%s/clockworkmod/backup/", path);
@@ -1102,10 +1432,12 @@ static void show_nandroid_advanced_restore_menu(const char* path) {
     if (file == NULL)
         return;
 
-    static const char* headers[] = { "Advanced Restore",
+    static char* headers[] = { "Advanced Restore",
                                      "",
                                      "Select image(s) to restore:",
                                      NULL };
+	if ( language == 0 )
+		headers[0] = "高级还原";
 
     int disable_wimax = 0;
     if (0 != get_partition_device("wimax", tmp))
@@ -1114,25 +1446,47 @@ static void show_nandroid_advanced_restore_menu(const char* path) {
     char *list[9 - disable_wimax];
     // Dynamically allocated entries will have (+) added/removed to end
     // Leave space at end of string  so terminator doesn't need to move
-    list[0] = malloc(sizeof("Restore boot    "));
-    list[1] = malloc(sizeof("Restore system    "));
-    list[2] = malloc(sizeof("Restore preload    "));
-    list[3] = malloc(sizeof("Restore data    "));
-    list[4] = malloc(sizeof("Restore cache    "));
-    list[5] = malloc(sizeof("Restore sd-ext    "));
-    if (!disable_wimax)
-        list[6] = malloc(sizeof("Restore wimax    "));
-    list[7 - disable_wimax] = "Start restore";
-    list[8 - disable_wimax] = NULL;
+	if ( language== 0 ) {
+		list[0] = malloc(sizeof("Restore boot    "));
+		list[1] = malloc(sizeof("Restore system    "));
+		list[2] = malloc(sizeof("Restore preload    "));
+		list[3] = malloc(sizeof("Restore data    "));
+		list[4] = malloc(sizeof("Restore cache    "));
+		list[5] = malloc(sizeof("Restore sd-ext    "));
+		if (!disable_wimax)
+			list[6] = malloc(sizeof("Restore wimax    "));
+		list[7 - disable_wimax] = "Start restore";
+		list[8 - disable_wimax] = NULL;
 
-    sprintf(list[0], "Restore boot    ");
-    sprintf(list[1], "Restore system    ");
-    sprintf(list[2], "Restore preload    ");
-    sprintf(list[3], "Restore data    ");
-    sprintf(list[4], "Restore cache    ");
-    sprintf(list[5], "Restore sd-ext    ");
-    if (!disable_wimax)
-        sprintf(list[6], "Restore wimax    ");
+		sprintf(list[0], "Restore boot    ");
+		sprintf(list[1], "Restore system    ");
+		sprintf(list[2], "Restore preload    ");
+		sprintf(list[3], "Restore data    ");
+		sprintf(list[4], "Restore cache    ");
+		sprintf(list[5], "Restore sd-ext    ");
+		if (!disable_wimax)
+			sprintf(list[6], "Restore wimax    ");
+	} else {
+		list[0] = malloc(sizeof("还原 boot    "));
+		list[1] = malloc(sizeof("还原 system    "));
+		list[2] = malloc(sizeof("还原 preload    "));
+		list[3] = malloc(sizeof("还原 data    "));
+		list[4] = malloc(sizeof("还原 cache    "));
+		list[5] = malloc(sizeof("还原 sd-ext    "));
+		if (!disable_wimax)
+			list[6] = malloc(sizeof("还原 wimax    "));
+		list[7 - disable_wimax] = "开始还原";
+		list[8 - disable_wimax] = NULL;
+
+		sprintf(list[0], "还原 boot    ");
+		sprintf(list[1], "还原 system    ");
+		sprintf(list[2], "还原 preload    ");
+		sprintf(list[3], "还原 data    ");
+		sprintf(list[4], "还原 cache    ");
+		sprintf(list[5], "还原 sd-ext    ");
+		if (!disable_wimax)
+			sprintf(list[6], "还原 wimax    ");
+	}
 
     unsigned char flags = NANDROID_NONE;
     int reload_menu;
@@ -1148,8 +1502,11 @@ static void show_nandroid_advanced_restore_menu(const char* path) {
         if (chosen_item < start_restore) {
             nandroid_adv_update_selections(list, chosen_item, &flags);
         } else if ((chosen_item == start_restore) && empty_nandroid_bitmask(flags)) {
-            ui_print("No image(s) selected!\n");
-            reload_menu = 1;
+			if ( language== 1 )
+				ui_print("No image(s) selected!\n");
+			else
+				ui_print("没有选择镜像!\n");
+			reload_menu = 1;
         }
     } while ((chosen_item >=0 && chosen_item < start_restore) || reload_menu);
 
@@ -1184,24 +1541,54 @@ static void run_dedupe_gc() {
 }
 
 static void choose_default_backup_format() {
+
     static const char* headers[] = { "Default Backup Format", "", NULL };
+if ( language== 0 ) { 
+	headers[0] = "默认备份格式";
+} else { 
+	headers[0] = "Default Backup Format";
+}
 
     int fmt = nandroid_get_default_backup_format();
 
     char **list;
+
     char* list_tar_default[] = { "tar (default)",
                                  "dup",
-                                 "tar + gzip",
+				"tar + gzip",
                                  NULL };
+if ( language== 0 ) { 
+	list_tar_default[0] = "tar (默认)";
+        list_tar_default[1] = "增量备份";
+} else { 
+	list_tar_default[0] = "tar (default)";
+        list_tar_default[1] = "dup";
+}
     char* list_dup_default[] = { "tar",
+
                                  "dup (default)",
+
+
                                  "tar + gzip",
                                  NULL };
+if ( language== 0 ) { 
+	list_dup_default[2] = "增量备份 (默认)";
+} else { 
+	list_dup_default[2] = "dup (default)";
+}
     char* list_tgz_default[] = { "tar",
+
                                  "dup",
                                  "tar + gzip (default)",
-                                 NULL };
 
+                                 NULL };
+if ( language== 0 ) {
+	list_tgz_default[1] = "增量备份";
+	list_tgz_default[2] = "tar + gzip (默认)";
+} else {
+	list_tgz_default[1] = "dup";
+	list_tgz_default[2] = "tar + gzip (default)";
+}
     if (fmt == NANDROID_BACKUP_FORMAT_DUP) {
         list = list_dup_default;
     } else if (fmt == NANDROID_BACKUP_FORMAT_TGZ) {
@@ -1216,17 +1603,29 @@ static void choose_default_backup_format() {
     switch (chosen_item) {
         case 0: {
             write_string_to_file(path, "tar");
+if ( language== 1 )
             ui_print("Default backup format set to tar.\n");
+else
+            ui_print("默认的备份格式已设置为 tar。\n");
+
             break;
         }
         case 1: {
             write_string_to_file(path, "dup");
+if ( language== 1 )
             ui_print("Default backup format set to dedupe.\n");
+else
+            ui_print("默认的备份格式已设置为增量备份。\n");
+
             break;
         }
         case 2: {
             write_string_to_file(path, "tgz");
+if ( language== 1 )
             ui_print("Default backup format set to tar + gzip.\n");
+else
+            ui_print("默认的备份格式已设置为 tar + gzip。\n");
+
             break;
         }
     }
@@ -1235,16 +1634,32 @@ static void choose_default_backup_format() {
 static void add_nandroid_options_for_volume(char** menu, char* path, int offset) {
     char buf[100];
 
+if ( language== 1 )
     sprintf(buf, "backup to %s", path);
+else
+    sprintf(buf, "备份到 %s", path);
+
     menu[offset] = strdup(buf);
 
+if ( language== 1 )
     sprintf(buf, "restore from %s", path);
+else
+    sprintf(buf, "[普通]从 %s 中选择备份", path);
+
     menu[offset + 1] = strdup(buf);
 
+if ( language== 1 )
     sprintf(buf, "delete from %s", path);
+else
+    sprintf(buf, "删除 %s 中的备份文件", path);
+
     menu[offset + 2] = strdup(buf);
 
+if ( language== 1 )
     sprintf(buf, "advanced restore from %s", path);
+else
+    sprintf(buf, "[高级]从 %s 中选择备份", path);
+
     menu[offset + 3] = strdup(buf);
 }
 
@@ -1256,7 +1671,14 @@ int show_nandroid_menu() {
     char* chosen_path = NULL;
     int action_entries_num = (num_extra_volumes + 1) * NANDROID_ACTIONS_NUM;
 
+
     static const char* headers[] = { "Backup and Restore", "", NULL };
+if ( language== 0 ) { 
+	headers[0] = "备份和还原";
+} else { 
+	headers[0] = "Backup and Restore";
+}
+
 
     // (MAX_NUM_MANAGED_VOLUMES + 1) for primary_path (/sdcard)
     // + 1 for extra NULL entry
@@ -1274,8 +1696,13 @@ int show_nandroid_menu() {
         }
     }
     // fixed bottom entries
+if ( language== 1 ) {
     list[offset] = "free unused backup data";
     list[offset + 1] = "choose default backup format";
+}else{
+    list[offset] = "释放未使用的备份数据";
+    list[offset + 1] = "选择默认的备份格式";
+}
     offset += NANDROID_FIXED_ENTRIES;
 
 #ifdef RECOVERY_EXTEND_NANDROID_MENU
@@ -1362,23 +1789,39 @@ static void format_sdcard(const char* volume) {
     if (!fs_mgr_is_voldmanaged(v) && !can_partition(volume))
         return;
 
+
     const char* headers[] = { "Format device:", volume, "", NULL };
 
     static char* list[] = { "default",
-                            "vfat",
+ 			    "vfat",
                             "exfat",
                             "ntfs",
                             "ext4",
                             "ext3",
                             "ext2",
                             NULL };
+if ( language== 0 ) {
+    headers[0] = "格式化设备:";
+
+    list[0] = "默认格式";
+} else {
+    headers[0] = "Format device:";
+
+    list[0] = "default";
+}
+                           
 
     int ret = -1;
     char cmd[PATH_MAX];
     int chosen_item = get_menu_selection(headers, list, 0, 0);
     if (chosen_item < 0) // REFRESH or GO_BACK
         return;
+if ( language== 1 )
     if (!confirm_selection("Confirm formatting?", "Yes - Format device"))
+	return;
+else
+    if (!confirm_selection("确认需要格式化？", "是 - 格式化此设备"))
+
         return;
 
     if (ensure_path_unmounted(v->mount_point) != 0)
@@ -1425,16 +1868,32 @@ static void format_sdcard(const char* volume) {
             break;
         }
     }
-
+if ( language== 1 ) {
     if (ret)
+
         ui_print("Could not format %s (%s)\n", volume, list[chosen_item]);
     else
         ui_print("Done formatting %s (%s)\n", volume, list[chosen_item]);
+
+
+	} else {
+		if (ret)
+
+        
+        ui_print("无法格式化 %s (%s)\n", volume, list[chosen_item]);
+    else
+        ui_print("成功完成格式化 %s (%s)\n", volume, list[chosen_item]);
+
+  	}
 }
 
 static void partition_sdcard(const char* volume) {
     if (!can_partition(volume)) {
+if ( language== 1 )
         ui_print("Can't partition device: %s\n", volume);
+else
+        ui_print("无法对设备进行分区: %s\n", volume);
+
         return;
     }
 
@@ -1457,9 +1916,19 @@ static void partition_sdcard(const char* volume) {
                                        "ext4",
                                        NULL };
 
+
     static const char* ext_headers[] = { "Ext Size", "", NULL };
     static const char* swap_headers[] = { "Swap Size", "", NULL };
     static const char* fstype_headers[] = { "Partition Type", "", NULL };
+if ( language== 0 ) {
+    ext_headers[0] = "Ext 大小";
+    swap_headers[0] = "Swap 大小";
+    fstype_headers[0] = "分区类型";
+} else {
+    ext_headers[0] = "Ext Size";
+    swap_headers[0] = "Swap Size";
+    fstype_headers[0] = "Partition Type";
+}
 
     int ext_size = get_menu_selection(ext_headers, ext_sizes, 0, 0);
     if (ext_size < 0)
@@ -1487,11 +1956,23 @@ static void partition_sdcard(const char* volume) {
     char cmd[PATH_MAX];
     setenv("SDPATH", sddevice, 1);
     sprintf(cmd, "sdparted -es %s -ss %s -efs %s -s", ext_sizes[ext_size], swap_sizes[swap_size], partition_types[partition_type]);
+if ( language== 1 )
     ui_print("Partitioning SD Card... please wait...\n");
+else
+    ui_print("正在对 SD 卡进行分区... 请稍等...\n");
+
     if (0 == __system(cmd))
+if ( language== 1 )
         ui_print("Done!\n");
+else
+        ui_print("完成！\n");
+
     else
+if ( language== 1 )
         ui_print("An error occured while partitioning your SD Card. Please see /tmp/recovery.log for more details.\n");
+else
+        ui_print("对 SD 卡进行分区出现了一个错误。请查看 /tmp/recovery.log 以了解更多细节。\n");
+
 }
 
 static int can_partition(const char* volume) {
@@ -1500,11 +1981,19 @@ static int can_partition(const char* volume) {
 
     Volume *vol = volume_for_path(volume);
     if (vol == NULL) {
+if ( language== 1 )
         LOGI("Can't format unknown volume: %s\n", volume);
+else
+        LOGI("无法格式化未知卷: %s\n", volume);
+
         return 0;
     }
     if (strcmp(vol->fs_type, "auto") != 0) {
+if ( language== 1 )
         LOGI("Can't partition non-vfat: %s (%s)\n", volume, vol->fs_type);
+else
+        LOGI("无法对非 vfat 设备进行分区: %s (%s)\n", volume, vol->fs_type);
+
         return 0;
     }
     // do not allow partitioning of a device that isn't mmcblkX or mmcblkXp1
@@ -1516,13 +2005,21 @@ static int can_partition(const char* volume) {
     } else if (vol->blk_device2 != NULL && strstr(vol->blk_device2, "/dev/block/mmcblk") != NULL) {
         device = vol->blk_device2;
     } else {
+if ( language== 1 )
         LOGI("Can't partition non mmcblk device: %s\n", vol->blk_device);
+else
+        LOGI("无法对非 mmcblk 设备进行分区: %s\n", vol->blk_device);
+
         return 0;
     }
 
     vol_len = strlen(device);
     if (device[vol_len - 2] == 'p' && device[vol_len - 1] != '1') {
+if ( language== 1 )
         LOGI("Can't partition unsafe device: %s\n", device);
+else
+        LOGI("无法为不安全的设备分区: %s\n", device);
+
         return 0;
     }
 
@@ -1539,35 +2036,74 @@ int show_advanced_menu() {
     char** extra_paths = get_extra_storage_paths();
     int num_extra_volumes = get_num_extra_volumes();
 
+
     static const char* headers[] = { "Advanced Menu", "", NULL };
+if ( language== 0 ) { 
+	headers[0] = "高级功能菜单";
+} else { 
+	headers[0] = "Advanced Menu";
+}
+
 
     memset(list, 0, MAX_NUM_MANAGED_VOLUMES + FIXED_ADVANCED_ENTRIES + 1);
 
+if ( language== 1 )
     list[list_index++] = "reboot recovery";
+else
+    list[list_index++] = "重启 recovery";
+
 
     char bootloader_mode[PROPERTY_VALUE_MAX];
     property_get("ro.bootloader.mode", bootloader_mode, "");
     if (!strcmp(bootloader_mode, "download")) {
+if ( language== 1 )
         list[list_index++] = "reboot to download mode";
+else
+        list[list_index++] = "重启到下载模式";
+
     } else {
+if ( language== 1 )
         list[list_index++] = "reboot to bootloader";
+else
+        list[list_index++] = "重启到 bootloader";
+
     }
 
+if ( language== 1 ) {
     list[list_index++] = "power off";
     list[list_index++] = "wipe dalvik cache";
     list[list_index++] = "report error";
     list[list_index++] = "key test";
     list[list_index++] = "show log";
+}else{
+    list[list_index++] = "关机";
+    list[list_index++] = "清除 dalvik 缓存";
+    list[list_index++] = "报告错误";
+    list[list_index++] = "键值测试";
+    list[list_index++] = "显示日志";
+}
 #ifdef BOARD_NATIVE_DUALBOOT_SINGLEDATA
     int index_tdb = list_index++;
     int index_bootmode = list_index++;
 #endif
 #ifdef ENABLE_LOKI
+
     int index_loki = list_index++;
+if ( language== 1 )
     list[index_loki] = "toggle loki support";
+else
+    list[index_loki] = "开关 loki 支持";
+
 #endif
 
+
     char list_prefix[] = "partition ";
+if ( language== 0 ) { 
+	list_prefix[0] = "分区 ";
+} else { 
+	list_prefix[0] = "partition ";
+} 
+
     if (can_partition(primary_path)) {
         sprintf(buf, "%s%s", list_prefix, primary_path);
         list[FIXED_ADVANCED_ENTRIES] = strdup(buf);
@@ -1600,22 +2136,38 @@ int show_advanced_menu() {
             break;
         switch (chosen_item) {
             case 0: {
+if ( language== 1 )
                 ui_print("Rebooting recovery...\n");
+else
+                ui_print("正在重启 recovery...\n");
+
                 reboot_main_system(ANDROID_RB_RESTART2, 0, "recovery");
                 break;
             }
             case 1: {
                 if (!strcmp(bootloader_mode, "download")) {
+if ( language== 1 )
                     ui_print("Rebooting to download mode...\n");
+else
+                    ui_print("正在重启到下载模式...\n");
+
                     reboot_main_system(ANDROID_RB_RESTART2, 0, "download");
                 } else {
+if ( language== 1 )
                     ui_print("Rebooting to bootloader...\n");
+else
+                    ui_print("正在重启到 bootloader...\n");
+
                     reboot_main_system(ANDROID_RB_RESTART2, 0, "bootloader");
                 }
                 break;
             }
             case 2: {
+if ( language== 1 )
                 ui_print("Shutting down...\n");
+else
+                ui_print("关机中...\n");
+
                 reboot_main_system(ANDROID_RB_POWEROFF, 0, 0);
                 break;
             }
@@ -1625,12 +2177,23 @@ int show_advanced_menu() {
                 if (volume_for_path("/sd-ext") != NULL)
                     ensure_path_mounted("/sd-ext");
                 ensure_path_mounted("/cache");
+if ( language== 1 )
                 if (confirm_selection("Confirm wipe?", "Yes - Wipe Dalvik Cache")) {
+		__system("rm -r /data/dalvik-cache");
+	        __system("rm -r /cache/dalvik-cache");
+                __system("rm -r /sd-ext/dalvik-cache");
+                    ui_print("Dalvik Cache wiped.\n");
+		}
+else {
+                if (confirm_selection("确认清除？", "是 - 清除 Dalvik 缓存")) {
+
                     __system("rm -r /data/dalvik-cache");
                     __system("rm -r /cache/dalvik-cache");
                     __system("rm -r /sd-ext/dalvik-cache");
-                    ui_print("Dalvik Cache wiped.\n");
+                    ui_print("已清除 Dalvik 缓存。\n");
+
                 }
+	}
                 ensure_path_unmounted("/data");
                 break;
             }
@@ -1638,14 +2201,23 @@ int show_advanced_menu() {
                 handle_failure(1);
                 break;
             case 5: {
+if ( language== 1 ) {
                 ui_print("Outputting key codes.\n");
                 ui_print("Go back to end debugging.\n");
+}else{
+                ui_print("正在监测键值。\n");
+                ui_print("按返回键来结束调试。\n");
+}
                 int key;
                 int action;
                 do {
                     key = ui_wait_key();
                     action = device_handle_key(key, 1);
+if ( language== 1 )
                     ui_print("Key: %d\n", key);
+else
+                    ui_print("键值: %d\n", key);
+
                 } while (action != GO_BACK);
                 break;
             }
@@ -1685,7 +2257,11 @@ int show_advanced_menu() {
 static void write_fstab_root(char *path, FILE *file) {
     Volume *vol = volume_for_path(path);
     if (vol == NULL) {
+if ( language== 1 )
         LOGW("Unable to get recovery.fstab info for %s during fstab generation!\n", path);
+else
+        LOGW("无法在 fstab 生成过程中获取 recovery.fstab 中 %s 的信息！\n", path);
+
         return;
     }
 
@@ -1706,7 +2282,11 @@ static void create_fstab() {
     __system("touch /etc/mtab");
     FILE *file = fopen("/etc/fstab", "w");
     if (file == NULL) {
+if ( language== 1 )
         LOGW("Unable to create /etc/fstab!\n");
+else
+        LOGW("无法创建 /etc/fstab!\n");
+
         return;
     }
     Volume *vol = volume_for_path("/boot");
@@ -1722,11 +2302,19 @@ static void create_fstab() {
     write_fstab_root("/sd-ext", file);
     write_fstab_root("/external_sd", file);
     fclose(file);
+if ( language== 1 )
     LOGI("Completed outputting fstab.\n");
+else
+    LOGI("fstab 输出已完成。\n");
+
 }
 
 static int bml_check_volume(const char *path) {
+if ( language== 1 )
     ui_print("Checking %s...\n", path);
+else
+    ui_print("正在检查 %s...\n", path);
+
     ensure_path_unmounted(path);
     if (0 == ensure_path_mounted(path)) {
         ensure_path_unmounted(path);
@@ -1735,11 +2323,19 @@ static int bml_check_volume(const char *path) {
 
     Volume *vol = volume_for_path(path);
     if (vol == NULL) {
+if ( language== 1 )
         LOGE("Unable process volume! Skipping...\n");
+else
+        LOGE("无法处理卷！跳过...\n");
+
         return 0;
     }
 
+if ( language== 1 )
     ui_print("%s may be rfs. Checking...\n", path);
+else
+    ui_print("%s 的格式可能为 rfs。检查中...\n", path);
+
     char tmp[PATH_MAX];
     sprintf(tmp, "mount -t rfs %s %s", vol->blk_device, path);
     int ret = __system(tmp);
@@ -1764,7 +2360,11 @@ void handle_failure(int ret) {
         return;
     mkdir("/sdcard/clockworkmod", S_IRWXU | S_IRWXG | S_IRWXO);
     __system("cp /tmp/recovery.log /sdcard/clockworkmod/recovery.log");
+if ( language== 1 )
     ui_print("/tmp/recovery.log was copied to /sdcard/clockworkmod/recovery.log. Please open ROM Manager to report the issue.\n");
+else
+    ui_print("已将 /tmp/recovery.log 复制到 /sdcard/clockworkmod/recovery.log。请打开ROM管理器来反馈这个问题。\n");
+
 }
 
 static int is_path_mounted(const char* path) {
@@ -1813,9 +2413,15 @@ int verify_root_and_recovery() {
             if (st.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH)) {
                 ui_show_text(1);
                 ret = 1;
+if ( language== 1 )
                 if (confirm_selection("ROM may flash stock recovery on boot. Fix?", "Yes - Disable recovery flash")) {
+__system("chmod -x /system/etc/install-recovery.sh");
+                }else {
+                if (confirm_selection("ROM 可能会在开机时将 recovery 还原为官方版本。是否修正？", "是 - 禁用自动还原")) {
+
                     __system("chmod -x /system/etc/install-recovery.sh");
-                }
+                	}
+		}
             }
         }
     }
@@ -1827,9 +2433,15 @@ int verify_root_and_recovery() {
             if ((st.st_mode & (S_ISUID | S_ISGID)) != (S_ISUID | S_ISGID)) {
                 ui_show_text(1);
                 ret = 1;
+if ( language== 1 )
                 if (confirm_selection("Root access possibly lost. Fix?", "Yes - Fix root (/system/bin/su)")) {
+__system("chmod 6755 /system/bin/su");
+                } else {
+                if (confirm_selection("root 访问权限设置不当。是否修正？", "是 - 修正 root (/system/bin/su)")) {
+
                     __system("chmod 6755 /system/bin/su");
                 }
+			}
             }
         }
     }
@@ -1840,9 +2452,15 @@ int verify_root_and_recovery() {
             if ((st.st_mode & (S_ISUID | S_ISGID)) != (S_ISUID | S_ISGID)) {
                 ui_show_text(1);
                 ret = 1;
+if ( language== 1 )
                 if (confirm_selection("Root access possibly lost. Fix?", "Yes - Fix root (/system/xbin/su)")) {
+__system("chmod 6755 /system/xbin/su");
+                } else {
+                if (confirm_selection("root 访问权限设置不当。是否修正？", "是 - 修正 root (/system/xbin/su)")) {
+
                     __system("chmod 6755 /system/xbin/su");
                 }
+			}
             }
         }
     }
@@ -1850,9 +2468,16 @@ int verify_root_and_recovery() {
     if (!exists) {
         ui_show_text(1);
         ret = 1;
+
+if ( language== 1 )
         if (confirm_selection("Root access is missing. Root device?", "Yes - Root device (/system/xbin/su)")) {
+__system("/sbin/install-su.sh");
+        } else {
+        if (confirm_selection("未添加 root 访问所需文件。是否添加？", "是 - 确认添加 (/system/xbin/su)")) {
+
             __system("/sbin/install-su.sh");
         }
+		}
     }
 
     ensure_path_unmounted("/system");

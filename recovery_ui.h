@@ -113,13 +113,17 @@ extern void device_truedualboot_after_load_volume_table();
 #define ITEM_NANDROID        4
 #define ITEM_PARTITION       5
 #define ITEM_ADVANCED        6
+#define ITEM_LANGUAGE       7
+
+
+int language;
 
 // Header text to display above the main menu.
 extern char* MENU_HEADERS[];
 
 // Text of menu items.
 extern char* MENU_ITEMS[];
-
+extern char* rootmenutitle[];
 // Loosely track the depth of the current menu
 extern int ui_root_menu;
 
@@ -131,4 +135,6 @@ extern int ui_handle_key(int key, int visible);
 
 void reboot_main_system(int cmd, int flags, char *arg);
 
+extern void set_item_menu();
+int vibrate_device(int timeout_ms);
 #endif

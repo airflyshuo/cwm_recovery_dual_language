@@ -21,7 +21,10 @@
 #include "recovery_ui.h"
 
 char* MENU_HEADERS[] = { NULL };
+/*extern void set_item_menu() {
 
+
+if ( language== 1 ) {*/
 char* MENU_ITEMS[] = { "reboot system now",
                        "install zip",
                        "wipe data/factory reset",
@@ -29,8 +32,28 @@ char* MENU_ITEMS[] = { "reboot system now",
                        "backup and restore",
                        "mounts and storage",
                        "advanced",
-                       NULL };
+		       "选择语言",
+			NULL };
 
+/*} else {
+char* MENU_ITEMS[] = { "立即重启系统",
+                       "刷入刷机包",
+                       "清除数据/恢复出厂设置",
+                       "清除缓存分区",
+                       "备份和还原",
+                       "挂载及 U 盘模式",
+                       "高级功能",
+		       "选择语言",
+
+                       NULL };
+	}
+}*/
+char* rootmenutitle[] = { EXPAND(RECOVERY_VERSION),
+
+                      "Only for "EXPAND(RECOVERY_PRODUCT_MODEL),
+
+                      "",
+                      NULL };
 void device_ui_init(UIParameters* ui_parameters) {
 }
 

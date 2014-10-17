@@ -54,10 +54,7 @@ endif
 
 RECOVERY_VERSION := $(RECOVERY_NAME) v6.0.5.1
 
-RECOVERY_BUILD_DATE := $(shell date +"%Y%m%d")
-RECOVERY_BUILDER := $(shell whoami)
-
-LOCAL_CFLAGS += -DRECOVERY_VERSION="$(RECOVERY_VERSION)" -DRECOVERY_BUILD_DATE="$(RECOVERY_BUILD_DATE)" -DRECOVERY_BUILDER="$(RECOVERY_BUILDER)"
+LOCAL_CFLAGS += -DRECOVERY_VERSION="$(RECOVERY_VERSION)"
 RECOVERY_API_VERSION := 2
 LOCAL_CFLAGS += -DRECOVERY_API_VERSION=$(RECOVERY_API_VERSION)
 
@@ -70,6 +67,12 @@ endif
 ifeq ($(BOARD_USE_CUSTOM_RECOVERY_FONT),)
   BOARD_USE_CUSTOM_RECOVERY_FONT := \"font_10x18.h\"
 endif
+
+ifeq ($(findstring fontcn,$(BOARD_USE_CUSTOM_RECOVERY_FONT)),fontcn)
+  LOCAL_CFLAGS += -DUSE_CHINESE_FONT
+endif
+RECOVERY_BUILD_TIME := $(shell date +"%Y-%m-%d %H:%M")
+LOCAL_CFLAGS += -DRECOVERY_BUILD_TIME="$(RECOVERY_BUILD_TIME)" -DRECOVERY_PRODUCT_MODEL="$(PRODUCT_MODEL)"
 
 BOARD_RECOVERY_CHAR_WIDTH := $(shell echo $(BOARD_USE_CUSTOM_RECOVERY_FONT) | cut -d _  -f 2 | cut -d . -f 1 | cut -d x -f 1)
 BOARD_RECOVERY_CHAR_HEIGHT := $(shell echo $(BOARD_USE_CUSTOM_RECOVERY_FONT) | cut -d _  -f 2 | cut -d . -f 1 | cut -d x -f 2)
@@ -150,6 +153,8 @@ LOCAL_STATIC_LIBRARIES += libstdc++ libc
 LOCAL_STATIC_LIBRARIES += libselinux
 LOCAL_STATIC_LIBRARIES += libcrypto_static
 
+include $(BUILD_EXECUTABLE)
+
 RECOVERY_LINKS := bu make_ext4fs edify busybox flash_image dump_image mkyaffs2image unyaffs erase_image nandroid reboot volume setprop getprop start stop dedupe minizip setup_adbd fsck_msdos newfs_msdos vdc sdcard pigz
 
 ifeq ($(TARGET_USERIMAGES_USE_F2FS), true)
@@ -158,44 +163,27 @@ endif
 
 # nc is provided by external/netcat
 RECOVERY_SYMLINKS := $(addprefix $(TARGET_RECOVERY_ROOT_OUT)/sbin/,$(RECOVERY_LINKS))
-
-BUSYBOX_LINKS := $(shell cat external/busybox/busybox-minimal.links)
-exclude := tune2fs mke2fs
-RECOVERY_BUSYBOX_SYMLINKS := $(addprefix $(TARGET_RECOVERY_ROOT_OUT)/sbin/,$(filter-out $(exclude),$(notdir $(BUSYBOX_LINKS))))
-
-LOCAL_ADDITIONAL_DEPENDENCIES := \
-    killrecovery.sh \
-    parted \
-    sdparted \
-    su.recovery \
-    install-su.sh \
-    run-su-daemon.sh
-
-LOCAL_ADDITIONAL_DEPENDENCIES += \
-    minivold \
-    recovery_e2fsck \
-    recovery_mke2fs \
-    recovery_tune2fs \
-    mount.exfat_static
-
-LOCAL_ADDITIONAL_DEPENDENCIES += $(RECOVERY_SYMLINKS) $(RECOVERY_BUSYBOX_SYMLINKS)
-
-include $(BUILD_EXECUTABLE)
-
 $(RECOVERY_SYMLINKS): RECOVERY_BINARY := $(LOCAL_MODULE)
-$(RECOVERY_SYMLINKS):
+$(RECOVERY_SYMLINKS): $(LOCAL_INSTALLED_MODULE)
 	@echo "Symlink: $@ -> $(RECOVERY_BINARY)"
 	@mkdir -p $(dir $@)
 	@rm -rf $@
 	$(hide) ln -sf $(RECOVERY_BINARY) $@
 
+ALL_DEFAULT_INSTALLED_MODULES += $(RECOVERY_SYMLINKS)
+
 # Now let's do recovery symlinks
+BUSYBOX_LINKS := $(shell cat external/busybox/busybox-minimal.links)
+exclude := tune2fs mke2fs
+RECOVERY_BUSYBOX_SYMLINKS := $(addprefix $(TARGET_RECOVERY_ROOT_OUT)/sbin/,$(filter-out $(exclude),$(notdir $(BUSYBOX_LINKS))))
 $(RECOVERY_BUSYBOX_SYMLINKS): BUSYBOX_BINARY := busybox
-$(RECOVERY_BUSYBOX_SYMLINKS):
+$(RECOVERY_BUSYBOX_SYMLINKS): $(LOCAL_INSTALLED_MODULE)
 	@echo "Symlink: $@ -> $(BUSYBOX_BINARY)"
 	@mkdir -p $(dir $@)
 	@rm -rf $@
 	$(hide) ln -sf $(BUSYBOX_BINARY) $@
+
+ALL_DEFAULT_INSTALLED_MODULES += $(RECOVERY_BUSYBOX_SYMLINKS) 
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := killrecovery.sh

@@ -82,7 +82,7 @@ enum {
   BACKGROUND_ICON_NONE,
   BACKGROUND_ICON_INSTALLING,
   BACKGROUND_ICON_ERROR,
-  BACKGROUND_ICON_CLOCKWORK,
+  BACKGROUND_ICON_ATX_ANZHI,
   BACKGROUND_ICON_CID,
   BACKGROUND_ICON_FIRMWARE_INSTALLING,
   BACKGROUND_ICON_FIRMWARE_ERROR,
@@ -160,6 +160,7 @@ FILE* fopen_path(const char *path, const char *mode);
  * changes
  */
 void set_perf_mode(int on);
+void vold_init();
 
 /*
  * Initialize mini vold so that recovery can mount, unmount, and format
